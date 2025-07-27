@@ -4,17 +4,27 @@ import os
 
 app = Flask(__name__)
 
-# ✅ USE A MODEL YOU HAVE ACCESS TO (for MakerSuite users)
+# ✅ Correct Gemini Pro model and API version
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 GOOGLE_AI_URL = (
-    f"https://generativelanguage.googleapis.com/v1beta/models/chat-bison-001:generateContent"
+    f"https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent"
     f"?key={GOOGLE_API_KEY}"
 )
 
 @app.route("/api/chat", methods=["POST"])
 def chat():
     user_message = request.json.get("message", "")
-    payload = {"contents": [{"parts": [{"text": user_message}]}]}
+    payload = {
+        "contents": [
+            {
+                "parts": [
+                    {
+                        "text": user_message
+                    }
+                ]
+            }
+        ]
+    }
     headers = {"Content-Type": "application/json"}
 
     try:
@@ -24,10 +34,8 @@ def chat():
         reply = data["candidates"][0]["content"]["parts"][0]["text"]
         return jsonify({"reply": reply})
     except requests.exceptions.HTTPError as e:
-        print("🔴 HTTP Error:", e)
         return jsonify({"reply": f"API error: {resp.text}"}), 500
     except Exception as e:
-        print("🔴 General Error:", e)
         return jsonify({"reply": f"Unexpected error: {str(e)}"}), 500
 
 @app.route("/", methods=["GET"])
