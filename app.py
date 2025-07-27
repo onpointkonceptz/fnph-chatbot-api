@@ -4,11 +4,10 @@ import os
 
 app = Flask(__name__)
 
+# ✅ Updated Gemini API endpoint and key setup
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
-
-# ✅ Use chat-bison-001 (a stable Google AI model)
 GOOGLE_AI_URL = (
-    f"https://generativelanguage.googleapis.com/v1beta/models/chat-bison-001:generateContent"
+    f"https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent"
     f"?key={GOOGLE_API_KEY}"
 )
 
@@ -35,7 +34,7 @@ def chat():
 def home():
     return "Chatbot backend is running."
 
-# ✅ EXTRA DEBUGGING ROUTE
+# ✅ Debugging route to confirm deployment
 @app.route("/test", methods=["GET"])
 def test():
     return "Test route works!"
