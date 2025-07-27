@@ -4,25 +4,17 @@ import os
 
 app = Flask(__name__)
 
-# ✅ Correct Gemini-Pro endpoint (v1beta) for MakerSuite API Key
+# ✅ USE A MODEL YOU HAVE ACCESS TO (for MakerSuite users)
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 GOOGLE_AI_URL = (
-    f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent"
+    f"https://generativelanguage.googleapis.com/v1beta/models/chat-bison-001:generateContent"
     f"?key={GOOGLE_API_KEY}"
 )
 
 @app.route("/api/chat", methods=["POST"])
 def chat():
     user_message = request.json.get("message", "")
-    payload = {
-        "contents": [
-            {
-                "parts": [
-                    {"text": user_message}
-                ]
-            }
-        ]
-    }
+    payload = {"contents": [{"parts": [{"text": user_message}]}]}
     headers = {"Content-Type": "application/json"}
 
     try:
@@ -42,7 +34,6 @@ def chat():
 def home():
     return "Chatbot backend is running."
 
-# ✅ Debug route to confirm if deployed correctly
 @app.route("/test", methods=["GET"])
 def test():
     return "Test route works!"
