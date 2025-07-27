@@ -6,7 +6,7 @@ app = Flask(__name__)
 
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 
-# ✅ Use chat-bison-001 (which works for most users)
+# ✅ Use chat-bison-001 (a stable Google AI model)
 GOOGLE_AI_URL = (
     f"https://generativelanguage.googleapis.com/v1beta/models/chat-bison-001:generateContent"
     f"?key={GOOGLE_API_KEY}"
@@ -34,3 +34,8 @@ def chat():
 @app.route("/", methods=["GET"])
 def home():
     return "Chatbot backend is running."
+
+# ✅ EXTRA DEBUGGING ROUTE
+@app.route("/test", methods=["GET"])
+def test():
+    return "Test route works!"
