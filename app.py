@@ -1,45 +1,58 @@
 from flask import Flask, request, jsonify
-from flask_cors import CORS
 from dotenv import load_dotenv
+import requests
 import os
-import google.generativeai as genai
 
-# Load environment variables from .env file
+# Load environment variables from .env
 load_dotenv()
 
-# Get your Gemini API key
-API_KEY = os.getenv("GOOGLE_API_KEY")
-
-# Initialize Gemini
-genai.configure(api_key=API_KEY)
-
-# Use Gemini Pro model
-model = genai.GenerativeModel("models/gemini-1.5-pro")
-
-# Flask app setup
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
 
-@app.route('/')
-def home():
-    return jsonify({"message": "FNPH Chatbot API is running"}), 200
+# Load your API key
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+
+# Correct Gemini Pro endpoint (v1beta)
+GOOGLE_AI_URL = (
+    f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent"
+    f"?key={GOOGLE_API_KEY}"
+)
 
 @app.route('/api/chat', methods=['POST'])
 def chat():
+    user_message = request.json.get("message", "")
+    if not user_message:
+        return jsonify({"reply": "No message provided."}), 400
+
+    payload = {
+        "contents": [
+            {
+                "parts": [{"text": user_message}]
+            }
+        ]
+    }
+
+    headers = {"Content-Type": "application/json"}
+
     try:
-        data = request.get_json()
-        user_message = data.get('message', '')
-
-        if not user_message:
-            return jsonify({'error': 'Message is required'}), 400
-
-        response = model.generate_content(user_message)
-        reply = response.text
-
-        return jsonify({'reply': reply})
-
+        response = requests.post(GOOGLE_AI_URL, json=payload, headers=headers)
+        response.raise_for_status()
+        data = response.json()
+        reply = data["candidates"][0]["content"]["parts"][0]["text"]
+        return jsonify({"reply": reply})
+    except requests.exceptions.HTTPError as e:
+        print("🔴 HTTP error:", e)
+        return jsonify({"reply": f"API error: {response.text}"}), 500
     except Exception as e:
-        return jsonify({'reply': f'API error: {str(e)}'}), 500
+        print("🔴 General error:", e)
+        return jsonify({"reply": f"Unexpected error: {str(e)}"}), 500
+
+@app.route('/', methods=['GET'])
+def home():
+    return "✅ Chatbot backend is running!"
+
+@app.route('/test', methods=['GET'])
+def test():
+    return "✅ Test route works!"
 
 if __name__ == '__main__':
     app.run(debug=True)
