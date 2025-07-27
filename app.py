@@ -5,8 +5,10 @@ import os
 app = Flask(__name__)
 
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
+
+# ✅ Use chat-bison-001 (which works for most users)
 GOOGLE_AI_URL = (
-    f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent"
+    f"https://generativelanguage.googleapis.com/v1beta/models/chat-bison-001:generateContent"
     f"?key={GOOGLE_API_KEY}"
 )
 
@@ -16,12 +18,18 @@ def chat():
     payload = {"contents": [{"parts": [{"text": user_message}]}]}
     headers = {"Content-Type": "application/json"}
 
-    resp = requests.post(GOOGLE_AI_URL, json=payload, headers=headers)
-    if resp.ok:
-        reply = resp.json()["candidates"][0]["content"]["parts"][0]["text"]
+    try:
+        resp = requests.post(GOOGLE_AI_URL, json=payload, headers=headers)
+        resp.raise_for_status()
+        data = resp.json()
+        reply = data["candidates"][0]["content"]["parts"][0]["text"]
         return jsonify({"reply": reply})
-    else:
-        return jsonify({"reply": "Sorry, something went wrong."}), 500
+    except requests.exceptions.HTTPError as e:
+        print("🔴 HTTP Error:", e)
+        return jsonify({"reply": f"API error: {resp.text}"}), 500
+    except Exception as e:
+        print("🔴 General Error:", e)
+        return jsonify({"reply": f"Unexpected error: {str(e)}"}), 500
 
 @app.route("/", methods=["GET"])
 def home():
